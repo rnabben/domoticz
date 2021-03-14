@@ -41,21 +41,37 @@ constexpr std::array<const char *, 8> CEvohomeBase::m_szControllerMode{ "Normal"
 constexpr std::array<const char *, 8> CEvohomeBase::m_szWebAPIMode{ "Auto", "AutoWithEco", "Away", "DayOff", "DayOffWithEco", "Custom", "HeatingOff", "Unknown" };
 constexpr std::array<const char *, 7> CEvohomeBase::m_szZoneMode{ "Auto", "PermanentOverride", "TemporaryOverride", "OpenWindow", "LocalOverride", "RemoteOverride", "Unknown" };
 
+template <class T, size_t N> static const char* GetArrayEntry(const std::array<T, N> & array, size_t nIndex)
+{
+	return array[std::min(nIndex, array.size() - 1)];
+}
+
 const char* CEvohomeBase::GetControllerModeName(uint8_t nControllerMode)
 {
-	return m_szControllerMode[std::min(nControllerMode,(uint8_t)7)];
+	return GetArrayEntry(m_szControllerMode, nControllerMode);
 }
 
 const char* CEvohomeBase::GetWebAPIModeName(uint8_t nControllerMode)
 {
-	return m_szWebAPIMode[std::min(nControllerMode,(uint8_t)7)];
+	return GetArrayEntry(m_szWebAPIMode, nControllerMode);
 }
 
 const char* CEvohomeBase::GetZoneModeName(uint8_t nZoneMode)
 {
-	return m_szZoneMode[std::min(nZoneMode, (uint8_t)6)];
+	return GetArrayEntry(m_szZoneMode, nZoneMode);
 }
 
+uint8_t CEvohomeBase::GetControllerModeFromWebAPIName(const std::string& apiName)
+ {
+	auto iter = std::find(m_szWebAPIMode.cbegin(), m_szWebAPIMode.cend(), apiName);
+	if (iter != m_szWebAPIMode.cend())
+	{
+		return iter - m_szWebAPIMode.cbegin();
+	}
+	return m_szWebAPIMode.size() - 1; //return last item
+ }
+
+ 
 CEvohomeBase::CEvohomeBase()
 	: m_ZoneOverrideLocal(m_nMaxZones)
 	, m_ZoneNames(m_nMaxZones)

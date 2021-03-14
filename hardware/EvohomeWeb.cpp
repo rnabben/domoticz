@@ -481,19 +481,35 @@ bool CEvohomeWeb::SetDHWState(const char *pdata)
 	return false;
 }
 
+std::string CEvohomeWeb::GetSystemMode(const temperatureControlSystem* tcs)
+{
+	if (tcs->status != nullptr)
+	{
+		auto& statusObject  = *tcs->status;
+		if (statusObject.isObject())
+		{
+			auto& systemModeStatusObject = statusObject["systemModeStatus"];
+			if (systemModeStatusObject.isObject())
+			{
+				auto& mode =  systemModeStatusObject["mode"];
+				if (mode.isConvertibleTo(Json::stringValue))
+				{
+					return systemModeStatusObject["mode"].asString();
+				}				
+			}
+		}
+		_log.Log(LOG_ERROR, "(%s) status does not contain valid system mode, data: %s", m_Name.c_str(), statusObject.toStyledString().c_str());
+	}
+	return "Unknown";
+}
 
 void CEvohomeWeb::DecodeControllerMode(temperatureControlSystem* tcs)
 {
 	unsigned long ID = (unsigned long)(strtod(tcs->systemId.c_str(), nullptr));
-	std::string szsystemMode, szmodelType;
-	uint8_t sysmode = 0;
+	std::string szmodelType;
 
-	if (tcs->status == nullptr)
-		szsystemMode = "Unknown";
-	else
-		szsystemMode = (*tcs->status)["systemModeStatus"]["mode"].asString();
-	while (sysmode < 7 && strcmp(szsystemMode.c_str(), m_szWebAPIMode[sysmode]) != 0)
-		sysmode++;
+	auto systemMode = GetSystemMode(tcs);
+	auto systemModeId = GetControllerModeFromWebAPIName(systemMode);
 
 	_tEVOHOME1 tsen;
 	memset(&tsen, 0, sizeof(_tEVOHOME1));
@@ -502,7 +518,7 @@ void CEvohomeWeb::DecodeControllerMode(temperatureControlSystem* tcs)
 	tsen.subtype = sTypeEvohome;
 	RFX_SETID3(ID, tsen.id1, tsen.id2, tsen.id3);
 	tsen.mode = 0; // web API does not support temp override of controller mode
-	tsen.status = sysmode;
+	tsen.status = systemModeId;
 	sDecodeRXMessage(this, (const unsigned char *)&tsen, "Controller mode", -1, nullptr);
 
 	if (GetControllerName().empty() || m_updatedev)

@@ -774,6 +774,7 @@ class CEvohomeBase : public CDomoticzHardwareBase
 	static const char *GetControllerModeName(uint8_t nControllerMode);
 	static const char *GetWebAPIModeName(uint8_t nControllerMode);
 	static const char *GetZoneModeName(uint8_t nZoneMode);
+	static uint8_t GetControllerModeFromWebAPIName(const std::string& apiName);
 
 	static void LogDate();
 	static void Log(bool bDebug, int nLogLevel, const char *format, ...)

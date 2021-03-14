@@ -116,6 +116,7 @@ class CEvohomeWeb : public CEvohomeBase
 	void DecodeZone(zone *hz);
 
 	// helpers
+	std::string GetSystemMode(const temperatureControlSystem* tcs);
 	uint8_t GetUnit_by_ID(unsigned long evoID);
 	std::string local_to_utc(const std::string &local_time);
 
